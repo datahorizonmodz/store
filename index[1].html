@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+
+<!-- Tambahan: import font Work Sans -->
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,100..900;1,100..900&display=swap');
+  * {
+    font-family: 'Work Sans', sans-serif !important;
+  }
+</style>
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DATZON STORE</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      margin: 0;
+      background: #fff;
+      overflow-x: hidden;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 5px 20px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    header h1 {
+      font-size: 26px;
+      font-weight: 800;
+    }
+
+    .home-btn img {
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .home-btn img:hover {
+      transform: scale(1.1);
+    }
+
+    .store-title {
+      text-align: center;
+      font-size: 22px;
+      margin: 15px 0;
+      font-weight: 600;
+    }
+
+    .kategori {
+      background: #fff;
+      display: inline-block;
+      padding: 10px 15px;
+      border-radius: 10px;
+      border-left: 4px solid red;
+      margin: 0 0 15px 15px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #toggleLayout {
+      margin: 10px auto;
+      display: block;
+      padding: 13px 35px;
+      border: none;
+      background: #007bff;
+      color: white;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      padding: 10px;
+      justify-items: center;
+      transition: 0.3s;
+    }
+
+    .product-card {
+      background: #fff;
+      border-radius: 15px;
+      text-align: center;
+      width: 100%;
+      max-width: 180px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      transition: all 0.4s ease;
+      overflow: hidden;
+      position: relative;
+      opacity: 0;
+      transform: translateY(40px);
+      cursor: pointer;
+    }
+
+    .product-card img {
+      width: 100%;
+      border-radius: 15px;
+      display: block;
+    }
+
+    .product-card p {
+      position: relative;
+      top: -5px;
+      left: 0;
+      margin: 1;
+      font-size: 12px;
+      font-weight: 500;
+      text-align: center;
+      width: 100%;
+    }
+
+    .product-card.active {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+      z-index: 5;
+    }
+
+    .product-card.blurred {
+      filter: blur(2px);
+      opacity: 0.6;
+    }
+
+    .scroll-fade {
+      opacity: 0;
+      transform: translateY(50px);
+      transition: opacity 1s ease-out, transform 1s ease-out;
+    }
+
+    .scroll-fade.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Testimonials Style */
+    .testimonials .testi-card {
+      background: #fff;
+      border: 1px solid #eee;
+      padding: 12px;
+      border-radius: 10px;
+      max-width: 420px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .testimonials .testi-card p {
+      font-size: 14px;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .testimonials .testi-card span {
+      font-size: 13px;
+      color: #666;
+      font-weight: 600;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(40px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 600px) {
+      .product-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+
+<style>
+/* === Store info (editable) === */
+/* Ubah font-size dan max-width di bawah sesuai kebutuhan */
+.store-info {
+  text-align: center;
+  font-family: 'Work Sans', sans-serif;
+  color: #333;
+  font-size: 15px;    /* ubah ukuran teks di sini */
+  max-width: 720px;   /* ubah lebar area teks di sini (px atau %) */
+  margin: 10px auto 16px auto;
+  line-height: 1.45;
+}
+@media (max-width: 480px) {
+  .store-info { font-size: 14px; max-width: 320px; padding: 0 12px; }
+}
+</style>
+
+
+<style>
+/* Fade-in animation for store-info */
+@keyframes fadeInUp {
+  0% { opacity: 0; transform: translateY(15px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+.store-info {
+  animation: fadeInUp 1s ease forwards;
+}
+</style>
+
+
+<style>
+/* === Fade-in Up Effect for Product Cards === */
+.product-card {
+  opacity: 0;
+  transform: translateY(25px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.product-card.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>
+
+
+<style>
+/* === Fade-in naik lembut untuk product card === */
+.product-card {
+  opacity: 0;
+  transform: translateY(25px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+.product-card.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+</style>
+
+
+<style>
+/* === Hover Efek Terangkat untuk Semua Tombol dan Kartu Produk === */
+.product-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 8px 18px rgba(0,0,0,0.2);
+  transition: all 0.25s ease;
+}
+
+/* Untuk semua tombol utama */
+button,
+#toggleLayout,
+.form-button,
+#form-popup button {
+  transition: all 0.25s ease;
+}
+
+/* Efek hover tombol: sedikit terangkat dan bayangan */
+button:hover,
+#toggleLayout:hover,
+.form-button:hover,
+#form-popup button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.2);
+}
+</style>
+
+
+<style>
+/* === Hover Efek Terangkat untuk Ikon Media Sosial === */
+#followUs a img {
+  transition: all 0.25s ease;
+}
+
+#followUs a:hover img {
+  transform: translateY(-5px);
+  box-shadow: 0 6px 14px rgba(0,0,0,0.25);
+  border-radius: 50%;
+}
+</style>
+
+</head>
+<body>
+  <header>
+    <h1>DATA HORIZON</h1>
+    <div class="home-btn" onclick="window.location.href='https://datahorizonmodz.github.io/web/';">
+      <img src="https://cdn-icons-png.flaticon.com/512/25/25694.png" alt="Home">
+    </div>
+  </header>
+
+  <h2 class="store-title">DATZON STORE</h2>
+  <div class="kategori">📱 Produk Digital Murahh</div>
+
+  <p class="store-info">💬 Halo, selamat datang! Pilih produk dulu, baca infonya, lalu isi form untuk tanya atau beli via WhatsApp.</p>
+<button id="toggleLayout">Ubah Layout</button>
+<a href="#" id="open-form" class="form-button">Beli/Tanya</a>
+
+  <div class="product-grid">
+    <div class="product-card" data-link="alightmotion.html">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh9ATilZZP5AGMxdFN3SqcNwHeY275gc2unDGdPEla9_S49qm2SolU57Na8la0E-1d8Gd9hnmuAFbGu0oa9QmBMhndeZIJYDzjmKvzdsK8Chb0I1H3KSqjryDJ1zKRO4Jy2R9CKrDHlq5-pSbsPdaXMhXSnI7jtn1s4ggwirY4vu433S3pdrp_KWA4P_ls/s320/Proyek%20Baru%2015%20%5BB8AE2FF%5D.png" alt="produk">
+      <p>Alight Motion</p>
+    </div>
+    <div class="product-card" data-link="capcut.html">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh-KrBxv_9tbCB_RXZOdTPEL88iSgwaHaf9WthqFTAjXne25H-JKwkT2_m3fhuCGkpKrzwLBHsXKVgVdoJo5QYVyNcAAWu8e8njZ6q7ScdcF9eskpT3F5GM1xV7WFnMSJZbwhTw5sHzH9GCbtuEoi3GYhTeg-0vg9SjkCXD7qiUwopy0HuYjmM2-CQFjBQ/s320/Proyek%20Baru%2015%20%5B0FDD82D%5D.png" alt="produk">
+      <p>CapCut</p>
+    </div>
+    <div class="product-card" data-link="canva.html">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEghZUCUZQzWhaA10_eIA52cvdTnJ2T-KzhnWlFr4SvtTt16evxO6lQD1gfQ8EXZMJUc-6CASZ5gMRfRHzDUXYxLao1zGCicA9vjlu3s3cd_hMS3NAFw2A6wsHPeyXcJ_QPW-GK9ryKBUseGM4ukqD4c5haqqufk6CTxmLdRaKRGnyZDc7AUovWfygwFd44/s320/Proyek%20Baru%2015%20%5B3D9C53A%5D.png" alt="produk">
+      <p>Canva</p>
+    </div>
+    <div class="product-card" data-link="youtube.html">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgUiylPaYcBifEP39Ir9NFi6khIJNOsS3LejghkZ9Hjv3_6xAoBHaHwvKMgC4tJaSJ_u4xYgFaqxvym-zp7w0yehStASBnjlXi6Yt_xkerkt6UW8Qs9JzPqgvl49QRKc1FzjRZhnRVinxlEH-cKA8aKp31giS6DfedlrOrqPygT-_5bQ1_vaQMeW75_d_k/s320/Proyek%20Baru%2015%20%5BAC10CA1%5D.png" alt="produk">
+      <p>Youtube</p>
+    </div>
+    <div class="product-card" data-link="netflix.html">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjgMxQXC08Scv3ehry6Er0fQig-1YCjQs5lg7hFqVJGyc_Srewhgqmof7lYCLf91xfozF28ONEfRQ1AVbOGR8BwEVB1TsBdEAv8AxMU64eG9MRm1Q0_7UQqCGL2_72gdbsHZkI-SUtMsi5YfAf3SM17luGwqYfBfLe-l-MfZf-5zNBfdCtTVpuxsLdJIvA/s320/Proyek%20Baru%2015%20%5BEAF8CC9%5D.png" alt="produk">
+      <p>Netflix</p>
+    </div>
+    <div class="product-card" data-link="spotify.html">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiqae6ay_Sb2JlcdxpN8ju3JXx_pkteO4kCToiCKun9hyk-PBu-zk2m4jUB5fPSwjHnFvZ-PoP7Qri9gIkdl5cGE0zEqGvkUVksrxBdvBvt903GrirSM73F8xrbLN7JzChP99i0R1DutNl_2XV2-nLwteFyWxSEnhruNORKM4sWowP09y0aSvqRSbkm6_I/s320/Proyek%20Baru%2015%20%5B81F9114%5D.png" alt="produk">
+      <p>Spotify</p>
+    </div>
+    <div class="product-card" data-link="wink.html">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEis6NdUpN0ErboZRonZDJFzCudOKBawXGj_B94OKlELXYHVnuJAsfHwlTmegj3238E5ddc4DnGwq1vtZY77h8LaQyqNACEA_9sqkXqJQLiciHb3Ix5xBEu19lBcVjflOsDz4v45Wi0e2Dj_b7b2Eccej_j0BiFA6Hmv6wcvP1Akm_N69OFmhxFx9gkcWHg/s320/Proyek%20Baru%206%20%5BDC7A095%5D.png" alt="produk">
+      <p>Wink</p>
+    </div>
+    <div class="product-card" data-link="viu.html">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEh5QkwDu5iszddLflcn37hodj7vThHyS7HpaPyU4HsVtqQXhwIP4-KSJ-EugNmlVtXFzo_MJPPHZJNBrTfLzKwPgLlHq0LW4lGGyaV3Cg9FPoggqXrcp1fyiLWnj34K0LLba3jCcbqxBTE5AKmjsOuaa8_POL-j1V_ZcgcTJSvGGREoPIUYKwE4Ho38Y7U/s320/Proyek%20Baru%206%20%5B357D2A6%5D.png" alt="produk">
+      <p>VIU</p>
+    </div>
+  </div>
+
+  <!-- 💬 TESTIMONIALS (dynamic random shown) -->
+  <section class="testimonials fade-in scroll-fade">
+    <div class="testi-container" style="max-width:900px;margin:40px auto;padding:20px;">
+      <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEjV8aCJofIIItiIxArbfatEYWejsqA3d-FuT6eGykptIXMXzAs2DgI_VZjJak0foH1IciHqPTIdxnHjrH7oRBwjeyYVyTa0Les4D7-tashLLz6r_NdlbwJ9pZ1UdHct7RW9Qi62Cv47vbY6ET3VZLu5o5lZLVKYRV6anEFKnd4Paxg3EntYb5PJZnJo19c/s320/Proyek%20Baru%209%20%5B8CB93DA%5D.png" alt="Logo DATZON STORE" class="scroll-fade" style="display:block;margin:0 auto 10px auto;width:300px;height:auto;object-fit:contain;border:none;box-shadow:none;">
+    <h3 style="text-align:center;margin-bottom:12px;font-size:18px;">Kata Mereka</h3>
+      <div id="testimonials-list" style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"></div>
+    </div>
+  </section>
+
+  <section id="followUs" class="scroll-fade" style="text-align:center;margin:80px 0;">
+    <h3 style="font-size:18px;font-weight:600;margin-bottom:15px;">Follow DataHorizon.com</h3>
+    <div style="display:flex;justify-content:center;gap:20px;margin-bottom:20px;">
+      <a href="https://youtube.com/@informatifdata" target="_blank"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQaYgczYNBtNXEixUwTcAUDLu3zg2HCZC6CV1JiYd0ZlzHkHh3_Yd8dXng&s=10" style="width:30px;height:30px;"></a>
+      <a href="https://instagram.com/datahorizon" target="_blank"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhd7YZrj1opvC6Wgq03rzWOb3sH3AGyoB1IPnUGn9II8idlf2uFhXoyR_VHiE37IyY7I7OPvwEPFlv_QIQ-at5suKot41LQkMLGe71W8bgUT6PVkudPac6iHwNy6PKoe3d8czzxTzqWY2yYYGteI3p_t_-YAHCncWtegGdYinBXdiDTeEfZaAYB6YNYGUw/s320/Proyek%20Baru%208%20%5B6E51461%5D.png" style="width:30px;height:30px;"></a>
+      <a href="https://wa.me/qr/XCO3JLFVZYEAN1" target="_blank"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEieTLS3wYoRyqqXdPi-KZgxmp9-QLcpl-KQJjJ4bHS216n2MZoWzfuelWx51JlWvWqYUV92us1skBPuOwsvV9FeDNNP650_x26mNRqN2F3cRddhpGYFXOxMakEJVCIvZTNgihzuwNhg4_Nja62kEoWW0hlkwBfSHn9OEfJ-szYAgW4s7y_VMjFo1pj2OjQ/s320/Proyek%20Baru%208%20%5B8A7CA6B%5D.png" style="width:30px;height:30px;"></a>
+      <a href="https://t.me/datzonmodz" target="_blank"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEhZoA_AIQg_2vIzrQLuYvmgpN3haAlFhS_o5UiXWLHpn35gUBcZAV6xQMF42PiEB9_05kEqW6N2faJh7jRycRd5nkKFS0grjJ3Fof0ubuRjG6aIoGz_O29lzwzrcziBu1OJEHL_rQbqTAM27iOAqAC14LAzleMo88qbYI4MipEXb3759O1dvfWKkZyogbc/s320/Proyek%20Baru%208%20%5B10D5503%5D.png" style="width:30px;height:30px;"></a>
+      <a href="https://saweria.co/DataHorizon" target="_blank"><img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEijz-VoNR33-MPNkjO1Pd4oyOYhnTakyi48wD5h54HNpMxpD0_zqPQQiIu_SF72mxWHzMUPX4TwvMKHuVPoxS_3p3wzvw5gVIecJEIgz_mGw8EcnVB65K-R60TtsXwwncBypsaYcT-qjDJm8u1aQ2cyf96fqi-3RtEPwNEtXjgQ4zI1sdqnvRsKG08E05Q/s320/quality_restoration_20251018214812122.png" style="width:30px;height:30px;"></a>
+    </div>
+    <p style="font-size:13px;color:#555;">© 2025 DataHorizon.com. All rights reserved.</p>
+  </section>
+
+  <script>
+    // Fade-in awal produk
+    window.addEventListener('DOMContentLoaded', () => {
+      const cards = document.querySelectorAll('.product-card');
+      cards.forEach((card, i) => {
+        card.style.animation = `fadeUp 1s ease-out forwards`;
+        card.style.animationDelay = `${i * 0.15}s`;
+      });
+    });
+
+    // Klik card -> efek aktif + buka link
+    const cards = document.querySelectorAll('.product-card');
+    document.body.addEventListener('click', (e) => {
+      const clickedCard = e.target.closest('.product-card');
+      if (clickedCard) {
+        const isActive = clickedCard.classList.contains('active');
+        cards.forEach(c => c.classList.remove('active', 'blurred'));
+        if (!isActive) {
+          clickedCard.classList.add('active');
+          cards.forEach(c => { if (c !== clickedCard) c.classList.add('blurred'); });
+          const link = clickedCard.getAttribute('data-link');
+          if (link) window.open(link, '_blank');
+        }
+      } else {
+        cards.forEach(c => c.classList.remove('active', 'blurred'));
+      }
+    });
+
+    // Scroll fade untuk bagian bawah
+    const scrollElements = document.querySelectorAll('.scroll-fade');
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.2 });
+    scrollElements.forEach(el => observer.observe(el));
+
+    // Tombol ubah layout
+    const toggleBtn = document.getElementById('toggleLayout');
+    const grid = document.querySelector('.product-grid');
+    let fourCols = false;
+    toggleBtn.addEventListener('click', () => {
+      fourCols = !fourCols;
+      grid.style.gridTemplateColumns = fourCols ? 'repeat(4, 1fr)' : 'repeat(2, 1fr)';
+    });
+
+    // --- Testimonials ---
+    const TESTI_NAMES = ["anonymus"];
+    const TESTI_PHRASES = [
+      "Ga rugi bang jual murah?",
+      "Terpercaya pokoknyaa",
+      "Fast Respon bett",
+      "Keren bng, amanah",
+      "Gua beli lagi nanti bang",
+      "Alight motion 1 thun paling worth it",
+      "Buset Murah murah ya",
+      "Real ga nihh bang?",
+      "Real jir amanahh",
+      "Kata gua langsung co aja dahh",
+      "Bintang 5 buat store ini",
+      "Murah dan Terpercaya",
+      "Gua dah beli, real amanah🔥",
+      "Nice store ⭐5 bang",
+      "Open reseller gk bng?"
+    ];
+
+    function pickRandomTestimonials(n=2) {
+      const pool = [];
+      for (let i=0;i<30;i++) {
+        const name = TESTI_NAMES[Math.floor(Math.random()*TESTI_NAMES.length)];
+        const text = TESTI_PHRASES[Math.floor(Math.random()*TESTI_PHRASES.length)];
+        pool.push({name, text});
+      }
+      const chosen = [];
+      while (chosen.length < n && pool.length>0) {
+        const idx = Math.floor(Math.random()*pool.length);
+        chosen.push(pool.splice(idx,1)[0]);
+      }
+      return chosen;
+    }
+
+    function renderTestimonials() {
+      const cont = document.getElementById('testimonials-list');
+      if (!cont) return;
+      const items = pickRandomTestimonials(3);
+      cont.innerHTML = items.map(it => `
+        <div class="testi-card">
+          <p>"${it.text}"</p>
+          <span>- ${it.name}</span>
+        </div>
+      `).join('');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => renderTestimonials());
+  </script>
+
+<!-- ✅ Custom Form Popup (Fixed + Customizable) -->
+<style>
+/* === Tombol Isi Form === */
+.form-button {
+  display: block;
+  width: 200px;             /* Ubah lebar tombol di sini (px atau %) */
+  margin: 20px auto;        /* Tetap rata tengah */
+  background: #007bff;
+  color: #fff;
+  padding: 12px 0;          /* Ubah tinggi tombol */
+  border-radius: 30px;      /* Ubah bentuk sudut tombol */
+  text-align: center;       /* Posisikan teks di tengah */
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 15px;          /* Ubah ukuran teks tombol */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: all 0.2s ease;
+}
+.form-button:hover {
+  background: #005fcc;
+  transform: translateY(-2px);
+}
+.form-button:hover {
+  background: #005fcc;
+  transform: translateY(-2px);
+}
+
+/* === Popup === */
+#form-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(3px);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  transition: opacity 0.3s ease;
+}
+#form-popup {
+  background: #fff;
+  border-radius: 20px;
+  padding: 30px 35px;
+  width: 60%;
+  max-width: 300px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.25);
+  text-align: center;
+  transform: translateY(40px);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+#form-popup.show {
+  transform: translateY(0);
+  opacity: 1;
+}
+#form-popup h3 {
+  margin-bottom: 15px;
+  color: #222;
+  font-size: 18px;
+}
+#form-popup input {
+  width: 85%;
+  padding: 10px 14px;
+  margin: 8px 0;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 12px;
+}
+#form-popup button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-weight: 400;
+  margin-top: 10px;
+  font-size: 15px;
+  transition: all 0.2s ease;
+}
+#form-popup button:hover {
+  background: #005fcc;
+  transform: translateY(-2px);
+}
+.close-popup {
+  position: absolute;
+  top: 12px;
+  right: 18px;
+  font-size: 22px;
+  color: #333;
+  cursor: pointer;
+}
+</style>
+
+<div id="form-popup-overlay">
+  <div id="form-popup">
+    <span class="close-popup">&times;</span>
+    <h3>Isi Form Dahulu</h3>
+    <input type="text" id="product-name" placeholder="Product (misal: Canva Premium)" required>
+    <input type="text" id="purpose" placeholder="Untuk (Beli / Tanya Stock)" required>
+    <button id="send-form">Kirim Form</button>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const openBtn = document.getElementById('open-form');
+  const overlay = document.getElementById('form-popup-overlay');
+  const popup = document.getElementById('form-popup');
+  const closeBtn = document.querySelector('.close-popup');
+  const sendBtn = document.getElementById('send-form');
+
+  openBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    overlay.style.display = 'flex';
+    setTimeout(() => popup.classList.add('show'), 10);
+  });
+
+  const closePopup = () => {
+    popup.classList.remove('show');
+    setTimeout(() => overlay.style.display = 'none', 300);
+  };
+
+  closeBtn.addEventListener('click', closePopup);
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) closePopup();
+  });
+
+  sendBtn.addEventListener('click', () => {
+    const product = document.getElementById('product-name').value.trim();
+    const purpose = document.getElementById('purpose').value.trim();
+    if (!product || !purpose) {
+      alert('Mohon isi semua field terlebih dahulu.');
+      return;
+    }
+    const waNumber = "6285137756114";
+    let text = "";
+    if (purpose.toLowerCase().includes("beli")) {
+      text = `Halo Min mau Beli ${product}nya apakah masih ada`;
+    } else {
+      text = `Halo Min mau nanya, Stock ${product}nya apakah masih ada`;
+    }
+    const encoded = encodeURIComponent(text);
+    const waLink = `https://wa.me/${waNumber}?text=${encoded}`;
+    window.open(waLink, "_blank");
+    closePopup();
+  });
+});
+</script>
+
+
+<script>
+// Apply fade-in effect to all product cards after layout change
+function animateProductCards() {
+  const cards = document.querySelectorAll('.product-card');
+  cards.forEach(card => card.classList.remove('show'));
+  cards.forEach((card, i) => {
+    setTimeout(() => card.classList.add('show'), i * 120);
+  });
+}
+
+// Intercept toggleLayout function if exists
+const originalToggleLayout = window.toggleLayout;
+window.toggleLayout = function() {
+  if (typeof originalToggleLayout === 'function') originalToggleLayout();
+  setTimeout(animateProductCards, 100); // trigger after layout transition
+};
+
+// Initial load animation
+document.addEventListener('DOMContentLoaded', () => {
+  animateProductCards();
+});
+</script>
+
+
+<script>
+function animateProductCards() {
+  const cards = document.querySelectorAll('.product-card');
+  cards.forEach(card => {
+    card.classList.remove('show');
+    card.style.opacity = 0;
+    card.style.transform = 'translateY(25px)';
+  });
+
+  cards.forEach((card, i) => {
+    setTimeout(() => {
+      card.classList.add('show');
+    }, i * 120);
+  });
+}
+
+// Pastikan toggleLayout tetap berfungsi dan animasi dijalankan ulang
+const originalToggleLayout = window.toggleLayout;
+window.toggleLayout = function() {
+  if (typeof originalToggleLayout === 'function') originalToggleLayout();
+  setTimeout(animateProductCards, 300);
+};
+
+// Animasi saat halaman pertama kali dibuka
+document.addEventListener('DOMContentLoaded', animateProductCards);
+</script>
+
+</body>
+</html>
