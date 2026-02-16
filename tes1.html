@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PREMIUM LIST | Subscription Tracker</title>
+    <!-- Google Fonts: Quicksand -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --surface-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --accent: #22c55e;
+            --accent-soft: #f0fdf4;
+            --border: #e2e8f0;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --sidebar-width: 280px;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        [data-theme="dark"] {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent: #4ade80;
+            --accent-soft: rgba(74, 222, 128, 0.1);
+            --border: #334155;
+            --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Quicksand', sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* --- Header --- */
+        header {
+            position: sticky;
+            top: 0; z-index: 100;
+            background-color: var(--bg-color);
+            border-bottom: 1px solid var(--border);
+            padding: 0.75rem 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left { display: flex; align-items: center; gap: 1rem; }
+        .header-left h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: 1px; color: var(--accent); }
+        .header-right { display: flex; gap: 0.5rem; }
+
+        .icon-btn {
+            background: none; border: none; color: var(--text-main);
+            cursor: pointer; padding: 0.5rem; border-radius: 50%;
+            transition: var(--transition); display: flex; align-items: center; justify-content: center;
+        }
+        .icon-btn:hover { background-color: var(--surface-color); transform: scale(1.1); }
+
+        /* --- Sidebar --- */
+        #sidebar-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); z-index: 1000;
+            opacity: 0; visibility: hidden; transition: var(--transition);
+        }
+        #sidebar-overlay.active { opacity: 1; visibility: visible; }
+
+        #sidebar {
+            position: fixed; left: calc(-1 * var(--sidebar-width)); top: 0; bottom: 0;
+            width: var(--sidebar-width); background: var(--card-bg); z-index: 1001;
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex; flex-direction: column; border-right: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        #sidebar.active { transform: translateX(var(--sidebar-width)); }
+
+        .sidebar-header {
+            padding: 2rem 1.5rem; display: flex; justify-content: space-between;
+            align-items: center; border-bottom: 1px solid var(--border);
+        }
+        .sidebar-header h2 { font-size: 1.25rem; color: var(--accent); }
+
+        .sidebar-nav { padding: 1rem 0; flex: 1; overflow-y: auto; }
+        .nav-item {
+            padding: 0.85rem 1.5rem; display: flex; align-items: center; gap: 1rem;
+            color: var(--text-main); text-decoration: none; font-weight: 600;
+            transition: var(--transition); cursor: pointer;
+        }
+        .nav-item:hover { background: var(--surface-color); color: var(--accent); }
+        .nav-item.active { background: var(--accent-soft); color: var(--accent); border-right: 4px solid var(--accent); }
+        
+        .nav-section {
+            padding: 1rem 1.5rem 0.5rem; font-size: 0.75rem;
+            font-weight: 700; color: var(--text-muted); text-transform: uppercase;
+        }
+
+        .nav-sub-item { padding-left: 3.5rem; font-size: 0.9rem; font-weight: 500; }
+
+        /* --- Admin FAB --- */
+        .admin-fab {
+            position: fixed; bottom: 2rem; right: 2rem;
+            background-color: var(--accent); color: white;
+            padding: 0.75rem 1.5rem; border-radius: 50px;
+            box-shadow: 0 4px 20px rgba(34, 197, 94, 0.4);
+            cursor: pointer; display: flex; align-items: center; gap: 0.5rem;
+            font-weight: 700; font-size: 0.9rem; z-index: 90;
+            transition: var(--transition); border: none;
+        }
+        .admin-fab:hover { transform: scale(1.05) translateY(-2px); filter: brightness(1.1); }
+
+        /* --- Cards Grid --- */
+        .cards-container {
+            padding: 0 1.5rem 0.5rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-grow: 1;
+        }
+
+        .card {
+            background-color: var(--card-bg); border: 1px solid var(--border);
+            border-radius: 20px; padding: 1.15rem; box-shadow: var(--shadow);
+            cursor: pointer; transition: var(--transition); position: relative;
+            animation: slideUp 0.5s ease-out forwards;
+        }
+        .card:hover { transform: translateY(-5px); border-color: var(--accent); }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .name-wrapper { display: flex; align-items: center; gap: 0.75rem; }
+        .customer-name { font-weight: 700; font-size: 1.05rem; }
+        .indicator-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+        .badge { font-size: 0.65rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 20px; text-transform: uppercase; }
+        .badge-active { background-color: #dcfce7; color: #166534; }
+        .badge-finished { background-color: #f1f5f9; color: #475569; }
+
+        .product-info {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 0.65rem; padding-top: 0.65rem; border-top: 1px dashed var(--border);
+        }
+        .product-tag { font-weight: 600; color: var(--accent); font-size: 0.9rem; }
+        .cycles-count { font-weight: 700; }
+
+        /* --- Modals --- */
+        #modal-overlay, .admin-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(8px); display: none; justify-content: center;
+            align-items: center; z-index: 2000; padding: 1.5rem;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg); border-radius: 24px; width: 100%;
+            max-width: 500px; padding: 2rem; box-shadow: var(--shadow);
+            position: relative; animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            max-height: 90vh; overflow-y: auto;
+        }
+
+        .form-group { margin-bottom: 1.25rem; }
+        .form-group label { display: block; font-size: 0.7rem; font-weight: 700; margin-bottom: 0.4rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+        .form-group input, .form-group select {
+            width: 100%; padding: 0.75rem; border-radius: 12px; border: 1px solid var(--border);
+            background: var(--surface-color); color: var(--text-main); font-weight: 600; outline: none;
+        }
+        .form-group input:focus { border-color: var(--accent); }
+        
+        /* Custom file input style */
+        input[type="file"] {
+            padding: 0.5rem;
+            background: var(--surface-color);
+        }
+
+        .admin-btn {
+            width: 100%; padding: 0.85rem; border: none; border-radius: 12px;
+            font-weight: 700; cursor: pointer; transition: var(--transition);
+            background-color: var(--accent); color: white; margin-top: 1rem;
+            display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+        }
+        .admin-btn:hover { filter: brightness(1.1); transform: translateY(-1px); }
+        .admin-btn:disabled { background-color: var(--text-muted); cursor: not-allowed; transform: none; }
+        .admin-btn.secondary { background-color: var(--surface-color); color: var(--text-main); }
+        .admin-btn.danger { background-color: var(--danger); color: white; }
+
+        /* --- Details Popup Modern Rework --- */
+        .modern-details-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+        .modern-details-title { font-size: 1.35rem; font-weight: 700; color: var(--text-main); }
+        .modern-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .detail-item { display: flex; flex-direction: column; gap: 0.15rem; }
+        .detail-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
+        .detail-value { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
+
+        /* --- Email History Table --- */
+        .history-list { margin-top: 1rem; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+        .history-row {
+            display: grid; grid-template-columns: 80px 1fr 90px; padding: 0.75rem;
+            border-bottom: 1px solid var(--border); font-size: 0.8rem;
+        }
+        .history-row:last-child { border-bottom: none; }
+        .history-header { background: var(--surface-color); font-weight: 700; color: var(--text-muted); }
+
+        /* --- Animations --- */
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes scaleIn { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+        .hidden { display: none !important; }
+        .summary-section { padding: 1rem 1.5rem; max-width: 1200px; margin: 0 auto; width: 100%; }
+        .summary-line { font-size: 0.8rem; color: var(--accent); font-weight: 500; margin-bottom: 0.25rem; }
+
+        /* --- Selector List --- */
+        .selector-list { max-height: 350px; overflow-y: auto; margin-top: 1rem; padding-right: 5px; }
+        .selector-item {
+            padding: 1rem; border: 1px solid var(--border); border-radius: 12px;
+            margin-bottom: 0.65rem; cursor: pointer; transition: var(--transition);
+            display: flex; flex-direction: column; gap: 0.25rem;
+        }
+        .selector-item:hover { border-color: var(--accent); background: var(--surface-color); }
+        .selector-item .title { font-weight: 700; font-size: 1rem; color: var(--text-main); }
+        .selector-item .sub { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+
+        /* Footer Stay Bottom */
+        footer {
+            margin-top: auto;
+            padding: 1.5rem; text-align: center; border-top: 1px solid var(--border);
+            color: var(--text-muted); font-size: 0.75rem; background-color: var(--surface-color);
+            width: 100%;
+        }
+
+        @media (max-width: 640px) {
+            .modal-content { padding: 1.5rem; border-radius: 20px; }
+            .dashboard-grid { grid-template-columns: 1fr 1fr; }
+            .modern-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body data-theme="light">
+
+    <!-- Sidebar -->
+    <div id="sidebar-overlay"></div>
+    <aside id="sidebar">
+        <div class="sidebar-header">
+            <h2>MENU</h2>
+            <button class="icon-btn" id="sidebar-close"><i data-lucide="x"></i></button>
+        </div>
+        <nav class="sidebar-nav">
+            <div class="nav-item active" data-view="home">
+                <i data-lucide="home"></i> Home
+            </div>
+            <div class="nav-item" data-view="wink">
+                <i data-lucide="check-circle"></i> Cek Wink
+            </div>
+            <div class="nav-item" data-view="winkit">
+                <i data-lucide="check-circle-2"></i> Cek Winkit
+            </div>
+            <div class="nav-item" data-view="history">
+                <i data-lucide="history"></i> History
+            </div>
+            <div class="nav-item" data-view="dashboard">
+                <i data-lucide="layout-dashboard"></i> Dashboard
+            </div>
+        </nav>
+    </aside>
+
+    <!-- FAB -->
+    <button class="admin-fab" id="fab-admin">
+        <i data-lucide="shield-check"></i> ADMIN
+    </button>
+
+    <!-- Header -->
+    <header>
+        <div class="header-left">
+            <button class="icon-btn" id="menu-toggle"><i data-lucide="menu"></i></button>
+            <h1>PREMIUM LIST</h1>
+        </div>
+        <div class="header-right">
+            <button class="icon-btn" id="search-toggle"><i data-lucide="search" id="search-icon"></i></button>
+            <button class="icon-btn" id="theme-toggle"><i data-lucide="sun" id="theme-icon"></i></button>
+        </div>
+    </header>
+
+    <!-- Search -->
+    <div id="search-wrapper" style="max-height:0; overflow:hidden; transition: max-height 0.4s ease; background: var(--surface-color);">
+        <div style="padding: 1rem 1.5rem; max-width: 800px; margin: 0 auto; display: flex; gap: 0.75rem;">
+            <input type="text" id="search-input" placeholder="Search by name or phone..." style="flex:1; padding:0.75rem; border-radius:12px; border:1px solid var(--border); outline:none; background: var(--bg-color); color: var(--text-main);">
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <section class="summary-section" id="summary-container"></section>
+
+    <!-- Main Views -->
+    <main class="cards-container" id="cards-grid">
+        <div id="loading-state" style="grid-column: 1/-1; text-align: center; padding: 4rem; color: var(--text-muted);">
+            <p>Loading data...</p>
+        </div>
+    </main>
+
+    <div id="dashboard-view" class="hidden" style="padding: 0 1.5rem 2rem; max-width: 1200px; margin: 0 auto; width: 100%;">
+        <h3 style="margin-bottom: 1rem; padding-left: 0.5rem;">Summary Dashboard</h3>
+        <div class="dashboard-grid" id="dashboard-content" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem;"></div>
+    </div>
+
+    <!-- MODALS -->
+
+    <!-- Pin Modal -->
+    <div class="admin-modal-overlay" id="modal-pin">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 1.5rem;">Admin Access</h2>
+            <div class="form-group">
+                <label>Enter 4-Digit PIN</label>
+                <input type="password" id="input-pin" maxlength="4" placeholder="****" style="text-align: center; font-size: 2rem; letter-spacing: 0.5rem;">
+            </div>
+            <button class="admin-btn" id="btn-verify-pin">Verify Access</button>
+            <button class="admin-btn secondary" onclick="closeAdminModals()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Admin Menu Popup -->
+    <div class="admin-modal-overlay" id="modal-admin-menu">
+        <div class="modal-content">
+            <h2 style="margin-bottom: 1.5rem; text-align: center;">Admin Operations</h2>
+            <button class="admin-btn" onclick="openAdmin('order')"><i data-lucide="plus-circle"></i> New Order</button>
+            <button class="admin-btn" onclick="openAdmin('renew')"><i data-lucide="refresh-cw"></i> Update Renew</button>
+            <button class="admin-btn" onclick="openAdmin('edit')"><i data-lucide="edit"></i> Edit Records</button>
+            <button class="admin-btn" onclick="openAdmin('history_edit')"><i data-lucide="folder-edit"></i> Edit History</button>
+            <button class="admin-btn danger" onclick="resetAllOrders()"><i data-lucide="trash-2"></i> RESET ORDER</button>
+            <button class="admin-btn secondary" onclick="closeAdminModals()" style="margin-top: 1.5rem;">Close</button>
+        </div>
+    </div>
+
+    <!-- Form Modal -->
+    <div class="admin-modal-overlay" id="modal-form">
+        <div class="modal-content" id="form-container">
+            <h2 id="form-title" style="margin-bottom: 1.5rem;">Form</h2>
+            <div id="form-content"></div>
+            <div id="form-actions"></div>
+        </div>
+    </div>
+
+    <!-- Subscription Details Modern Rework -->
+    <div id="modal-overlay">
+        <div class="modal-content">
+            <div class="modern-details-header">
+                <h2 class="modern-details-title">Details</h2>
+                <i data-lucide="crown" style="color: var(--accent); width: 28px; height: 28px;"></i>
+            </div>
+            
+            <div class="modern-grid" id="modal-data">
+                <!-- Data injected here -->
+            </div>
+
+            <div id="account-info-section" class="hidden" style="margin-top: 1.5rem; animation: fadeIn 0.3s ease;">
+                <h3 style="margin-bottom: 0.75rem; font-size: 0.9rem; font-weight: 700; color: var(--accent);">Account Info History</h3>
+                <div class="history-list" id="email-history-list"></div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 2rem;">
+
+                <button class="admin-btn" id="btn-toggle-info">
+                    <i data-lucide="info"></i>
+                    <span id="btn-toggle-text">CEK INFO ACCOUNT</span>
+                </button>
+
+                <!-- BUTTON AKTIFKAN ORDER -->
+                <button class="admin-btn" id="btn-reactivate-order" style="display:none;">
+                    <i data-lucide="rotate-ccw"></i>
+                    AKTIFKAN ORDER LAGI
+                </button>
+
+                <button class="admin-btn secondary" id="modal-close-btn">
+                    Close
+                </button>
+
+            </div>
+        </div>
+    </div>
+
+    <footer><p>&copy; 2026 Premium Subscription System</p></footer>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, onSnapshot, doc, addDoc, updateDoc, Timestamp, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAJxH3uodX0yStj7s3JWj7gWm0LToVbtxs",
+            authDomain: "listwink-5fdec.firebaseapp.com",
+            projectId: "listwink-5fdec",
+            storageBucket: "listwink-5fdec.firebasestorage.app",
+            messagingSenderId: "817064940204",
+            appId: "1:817064940204:web:844bf84691bf0ce9000509",
+            measurementId: "G-QMWBNXNX9M"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // --- CLOUDINARY CONFIG ---
+        const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmgyxyhkb/image/upload";
+        const CLOUDINARY_PRESET = "admin_store";
+
+        // --- IMAGE UPLOAD FUNCTION ---
+        async function uploadImageToCloudinary(file) {
+            if (!file) return null;
+            
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("upload_preset", CLOUDINARY_PRESET);
+
+            try {
+                const response = await fetch(CLOUDINARY_URL, {
+                    method: "POST",
+                    body: formData
+                });
+                
+                if (!response.ok) throw new Error("Upload failed");
+                
+                const data = await response.json();
+                return data.secure_url;
+            } catch (error) {
+                console.error("Cloudinary Upload Error:", error);
+                alert("Image upload failed! Check connection.");
+                return null;
+            }
+        }
+        
+        const ADMIN_PIN = "1234";
+        let authenticated = localStorage.getItem("isAdmin") === "true";
+        let subscriptions = [];
+        let searchTerm = "";
+        let currentView = "home";
+        
+        // UI Selectors
+        const cardsGrid = document.getElementById('cards-grid');
+        const summaryContainer = document.getElementById('summary-container');
+        const dashboardView = document.getElementById('dashboard-view');
+        const dashboardContent = document.getElementById('dashboard-content');
+        const searchInput = document.getElementById('search-input');
+        const modalOverlay = document.getElementById('modal-overlay');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const modalPin = document.getElementById('modal-pin');
+        const modalAdminMenu = document.getElementById('modal-admin-menu');
+        const modalForm = document.getElementById('modal-form');
+        const formContent = document.getElementById('form-content');
+        const formActions = document.getElementById('form-actions');
+        const formTitle = document.getElementById('form-title');
+
+        // Logic Helpers
+        const getRemaining = (s) => (s.totalCycles || 0) - (s.usedCycles || 0);
+        const getStatus = (s) => (s.isDeleted ? "DELETED" : (getRemaining(s) > 0 ? "ACTIVE" : "FINISHED"));
+        const getDotColor = (r) => {
+            if (r >= 4) return '#ef4444'; 
+            if (r === 3) return '#f97316';
+            if (r === 2) return '#eab308';
+            if (r === 1) return '#22c55e';
+            return '#94a3b8';
+        };
+
+        // Initialize
+        async function init() {
+            await signInAnonymously(auth);
+            onAuthStateChanged(auth, (user) => { if (user) fetchData(); });
+        }
+
+        function fetchData() {
+            onSnapshot(collection(db, 'subscriptions'), (snap) => {
+                subscriptions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+                renderUI();
+            });
+        }
+
+        function renderUI() {
+            let filtered = [...subscriptions];
+            
+            // Auto Sorting
+            filtered.sort((a, b) => {
+                const ra = getRemaining(a), rb = getRemaining(b);
+                if (ra === 0 && rb === 0) return 0;
+                if (ra === 0) return 1; if (rb === 0) return -1;
+                return ra - rb;
+            });
+
+            if (searchTerm) {
+                const t = searchTerm.toLowerCase();
+                filtered = filtered.filter(s => s.customerName?.toLowerCase().includes(t) || s.phone?.includes(t));
+            }
+
+            if (currentView === "wink") filtered = filtered.filter(s => s.product === "WINK" && getStatus(s) === "ACTIVE" && !s.isDeleted);
+            else if (currentView === "winkit") filtered = filtered.filter(s => s.product === "WINKIT" && getStatus(s) === "ACTIVE" && !s.isDeleted);
+            else if (currentView === "history") filtered = filtered.filter(s => getStatus(s) === "FINISHED" || s.isDeleted === true);
+            else if (currentView === "home") filtered = filtered.filter(s => getStatus(s) === "ACTIVE" && !s.isDeleted);
+
+            renderSummary(subscriptions.filter(s => !s.isDeleted && getRemaining(s) > 0));
+            
+            if (currentView === "dashboard") {
+                cardsGrid.classList.add('hidden');
+                dashboardView.classList.remove('hidden');
+                renderDashboard(subscriptions);
+            } else {
+                cardsGrid.classList.remove('hidden');
+                dashboardView.classList.add('hidden');
+                renderCards(filtered);
+            }
+            lucide.createIcons();
+        }
+
+        function renderCards(data) {
+            cardsGrid.innerHTML = data.length === 0 ? '<div style="grid-column:1/-1; text-align:center; padding:4rem; opacity:0.6;">No data found.</div>' : '';
+            data.forEach((sub, i) => {
+                const rem = getRemaining(sub);
+                const status = getStatus(sub);
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.style.animationDelay = `${i * 0.03}s`;
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="name-wrapper">
+                            <span class="indicator-dot" style="background-color: ${getDotColor(rem)}"></span>
+                            <span class="customer-name">${sub.customerName}</span>
+                        </div>
+                        <span class="badge ${status === 'ACTIVE' ? 'badge-active' : 'badge-finished'}">${status}</span>
+                    </div>
+                    <div class="phone-number"><i data-lucide="phone" size="14"></i> ${sub.phone}</div>
+                    <div class="product-info">
+                        <div><span class="product-tag">${sub.product}</span> <span style="font-size:0.75rem; opacity:0.6;">${sub.plan}</span></div>
+                        <div class="cycles-count" style="font-size:0.8rem;">Remaining: ${rem}x</div>
+                    </div>
+                `;
+                card.onclick = () => openDetails(sub);
+                cardsGrid.appendChild(card);
+            });
+        }
+
+        function renderSummary(data) {
+            summaryContainer.innerHTML = '';
+            data.slice(0, 5).forEach(s => {
+                const p = document.createElement('p');
+                p.className = 'summary-line';
+                p.innerText = `${s.phone} ${s.customerName} : Renew ${s.product} remaining ${getRemaining(s)}x`;
+                summaryContainer.appendChild(p);
+            });
+        }
+
+        function renderDashboard(data) {
+            const activeOnly = data.filter(s => !s.isDeleted);
+            const stats = {
+                total: data.length,
+                active: activeOnly.filter(s => getStatus(s) === "ACTIVE").length,
+                finished: data.filter(s => getStatus(s) === "FINISHED").length,
+                wink: activeOnly.filter(s => s.product === "WINK").length,
+                winkit: activeOnly.filter(s => s.product === "WINKIT").length,
+                r1: activeOnly.filter(s => getRemaining(s) === 1).length,
+                r2: activeOnly.filter(s => getRemaining(s) === 2).length,
+                r3: activeOnly.filter(s => getRemaining(s) === 3).length,
+                r4: activeOnly.filter(s => getRemaining(s) >= 4).length
+            };
+            const labels = ['Total','Active','Finished','WINK','WINKIT','1x Left','2x Left','3x Left','4x+ Left'];
+            const vals = Object.values(stats);
+            dashboardContent.innerHTML = labels.map((l, i) => `
+                <div class="stat-card">
+                    <span class="stat-val">${vals[i]}</span>
+                    <span class="stat-label">${l}</span>
+                </div>
+            `).join('');
+        }
+
+        // Detail View Modern Rework
+        function openDetails(sub) {
+            const dateStr = sub.createdAt?.seconds ? new Date(sub.createdAt.seconds * 1000).toLocaleDateString('en-GB') : '-';
+            const modalData = document.getElementById('modal-data');
+            
+            const fields = [
+                { label: 'Customer', value: sub.customerName },
+                { label: 'Phone', value: sub.phone },
+                { label: 'Product', value: sub.product },
+                { label: 'Plan', value: sub.plan },
+                { label: 'Status', value: getStatus(sub) },
+                { label: 'Remaining', value: getRemaining(sub) + 'x' },
+                { label: 'Cycles Used', value: `${sub.usedCycles} / ${sub.totalCycles}` },
+                { label: 'Joined Date', value: dateStr }
+            ];
+
+            modalData.innerHTML = fields.map(f => `
+                <div class="detail-item">
+                    <span class="detail-label">${f.label}</span>
+                    <span class="detail-value">${f.value}</span>
+                </div>
+            `).join('');
+            
+            // --- ADDED IMAGE DISPLAY IN DETAILS ---
+            if (sub.imageUrl) {
+                const imgContainer = document.createElement('div');
+                imgContainer.style.gridColumn = "1 / -1";
+                imgContainer.style.marginTop = "1rem";
+                imgContainer.innerHTML = `
+                    <span class="detail-label" style="display:block; margin-bottom:0.5rem;">Proof of Subscription</span>
+                    <img src="${sub.imageUrl}" style="width:100%; border-radius:12px; border:1px solid var(--border); max-height: 200px; object-fit: cover;" alt="Proof">
+                    <a href="${sub.imageUrl}" target="_blank" style="display:inline-block; margin-top:0.5rem; font-size:0.8rem; color:var(--accent); text-decoration:none; font-weight:700;">View Full Size <i data-lucide="external-link" style="width:12px; display:inline;"></i></a>
+                `;
+                modalData.appendChild(imgContainer);
+            }
+
+            const historyList = document.getElementById('email-history-list');
+            historyList.innerHTML = `<div class="history-row history-header"><span>Cycle</span><span>Email</span><span>Date</span></div>`;
+            
+            for(let i=1; i<=sub.totalCycles; i++) {
+                const hist = (sub.emailHistory || []).find(h => h.cycle === i);
+                const hDate = hist ? (hist.date?.seconds ? new Date(hist.date.seconds * 1000).toLocaleDateString('en-GB') : '-') : '-/-/-';
+                historyList.innerHTML += `
+                    <div class="history-row" style="${!hist ? 'opacity: 0.5;' : ''}">
+                        <span style="font-weight: 700;">Renew ${i}</span>
+                        <span style="overflow:hidden; text-overflow:ellipsis; white-space: nowrap;">${hist ? hist.email : 'pending'}</span>
+                        <span>${hDate}</span>
+                    </div>
+                `;
+            }
+
+            document.getElementById('account-info-section').classList.add('hidden');
+            document.getElementById('btn-toggle-text').innerText = "CEK INFO ACCOUNT";
+            document.getElementById('btn-toggle-info').onclick = () => {
+                const sect = document.getElementById('account-info-section');
+                const isHidden = sect.classList.toggle('hidden');
+                document.getElementById('btn-toggle-text').innerText = isHidden ? "CEK INFO ACCOUNT" : "HIDE INFO ACCOUNT";
+            };
+
+            const reactivateBtn = document.getElementById("btn-reactivate-order");
+
+            reactivateBtn.onclick = async () => {
+                const confirmReactivate = confirm("Aktifkan kembali order ini?");
+                if (!confirmReactivate) return;
+
+                try {
+                    await updateDoc(
+                        doc(db, "subscriptions", sub.id),
+                        { isDeleted: false }
+                    );
+                    sub.isDeleted = false;
+                    alert("Order berhasil diaktifkan kembali");
+                    closeAdminModals();
+                    currentView = "home";
+                    renderUI();
+                } catch (err) {
+                    console.error(err);
+                    alert("Gagal mengaktifkan order");
+                }
+            };
+            // default sembunyi
+            reactivateBtn.style.display = "none";
+
+            const remainingCycle = sub.totalCycles - sub.usedCycles;
+
+            // jika data di history DAN masih punya sisa cycle
+            if (sub.isDeleted === true && remainingCycle > 0) {
+              reactivateBtn.style.display = "flex";
+            }
+
+            modalOverlay.style.display = 'flex';
+            lucide.createIcons();
+        }
+
+        // Admin Security
+        document.getElementById('fab-admin').onclick = () => {
+          if (authenticated) {
+            modalAdminMenu.style.display = 'flex';
+          } else {
+            modalPin.style.display = 'flex';
+          }
+        };
+
+        document.getElementById('btn-verify-pin').onclick = () => {
+            if (document.getElementById('input-pin').value === ADMIN_PIN) {
+                authenticated = true;
+                localStorage.setItem("isAdmin", "true");
+                modalPin.style.display = 'none';
+                modalAdminMenu.style.display = 'flex';
+            }
+        };
+
+        window.openAdmin = (type) => {
+            modalAdminMenu.style.display = 'none';
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+            
+            if (!authenticated) { modalPin.style.display = 'flex'; return; }
+            closeAdminModals();
+            modalForm.style.display = 'flex';
+            
+            if (type === 'order') renderOrderForm();
+            else if (type === 'renew') renderSelector('renew');
+            else if (type === 'edit') renderSelector('edit');
+            else if (type === 'history_edit') renderSelector('history_edit');
+        };
+
+        window.closeAdminModals = function() {
+            [modalPin, modalAdminMenu, modalForm].forEach(m => m.style.display = 'none');
+        };
+        window.goBackAdminMenu = function() {
+            modalForm.style.display = 'none';
+            modalAdminMenu.style.display = 'flex';
+        };
+
+        window.resetAllOrders = async function() {
+            if (!authenticated) {
+                modalAdminMenu.style.display = 'none';
+                modalPin.style.display = 'flex';
+                return;
+            }
+            const confirmed = confirm("Apakah anda benar-benar ingin mereset semua order?");
+            if (!confirmed) return;
+
+            try {
+                const allSubs = [...subscriptions];
+                const activeOrders = allSubs.filter(s => !s.isDeleted && getRemaining(s) > 0);
+                
+                if (activeOrders.length === 0) {
+                    alert("Tidak ada order aktif yang bisa dipertahankan.");
+                    return;
+                }
+                
+                const randomIndex = Math.floor(Math.random() * activeOrders.length);
+                const orderToKeep = activeOrders[randomIndex];
+                const keepId = orderToKeep.id;
+                
+                for (const sub of allSubs) {
+                    if (sub.id !== keepId) {
+                        await deleteDoc(doc(db, 'subscriptions', sub.id));
+                    }
+                }
+                
+                alert("Reset berhasil. 1 order aktif dipertahankan.");
+                closeAdminModals();
+                currentView = 'home';
+                document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+                document.querySelector('.nav-item[data-view="home"]').classList.add('active');
+                
+            } catch (err) {
+                console.error("Reset error:", err);
+                alert("Gagal melakukan reset: " + err.message);
+            }
+        };
+
+        // Form Generators
+        function renderOrderForm() {
+            formTitle.innerText = "New Order";
+            formContent.innerHTML = `
+                <div class="form-group"><label>Phone</label><input type="text" id="f-phone"></div>
+                <div class="form-group"><label>Name</label><input type="text" id="f-name"></div>
+                <div class="form-group"><label>Product</label><select id="f-product"><option>WINK</option><option>WINKIT</option></select></div>
+                <div class="form-group"><label>Plan</label><select id="f-plan"><option>7 HARI</option><option>14 HARI</option><option>1 BULAN</option></select></div>
+                <div class="form-group"><label>First Email</label><input type="email" id="f-email"></div>
+                <!-- ADDED IMAGE INPUT -->
+                <div class="form-group"><label>Proof Image (Optional)</label><input type="file" id="f-image" accept="image/*"></div>
+                <div class="form-group"><label>Created Date</label><input type="date" id="f-date" value="${new Date().toISOString().split('T')[0]}"></div>
+            `;
+            formActions.innerHTML = `
+                <button class="admin-btn" id="btn-submit-order">Save Order</button>
+                <button class="admin-btn secondary" onclick="goBackAdminMenu()">Back</button>
+            `;
+            document.getElementById('btn-submit-order').onclick = async () => {
+                const planMap = { "7 HARI": 1, "14 HARI": 2, "1 BULAN": 4 };
+                const btn = document.getElementById('btn-submit-order');
+                
+                // UPLOAD IMAGE LOGIC
+                let uploadedUrl = "";
+                const imageFile = document.getElementById('f-image').files[0];
+                if (imageFile) {
+                    btn.innerText = "Uploading Image...";
+                    btn.disabled = true;
+                    uploadedUrl = await uploadImageToCloudinary(imageFile);
+                    if (!uploadedUrl) {
+                        btn.innerText = "Save Order";
+                        btn.disabled = false;
+                        return; // Stop if upload failed
+                    }
+                }
+                
+                btn.innerText = "Saving Data...";
+                
+                const sub = {
+                    phone: document.getElementById('f-phone').value,
+                    customerName: document.getElementById('f-name').value,
+                    product: document.getElementById('f-product').value,
+                    plan: document.getElementById('f-plan').value,
+                    totalCycles: planMap[document.getElementById('f-plan').value],
+                    usedCycles: 1,
+                    isDeleted: false,
+                    imageUrl: uploadedUrl, // Save URL
+                    createdAt: Timestamp.fromDate(new Date(document.getElementById('f-date').value)),
+                    emailHistory: [{ cycle: 1, email: document.getElementById('f-email').value, date: Timestamp.fromDate(new Date(document.getElementById('f-date').value)) }]
+                };
+                
+                if (!sub.phone || !sub.customerName || !sub.emailHistory[0].email) {
+                    btn.innerText = "Save Order";
+                    btn.disabled = false;
+                    return alert("Fill all required fields");
+                }
+                
+                await addDoc(collection(db, 'subscriptions'), sub);
+                closeAdminModals();
+            };
+        }
+
+        window.renderSelector = function(mode) {
+            let titles = { renew: "Select for Renew", edit: "Select for Edit", history_edit: "Select History Record" };
+            formTitle.innerText = titles[mode];
+            
+            let list = [...subscriptions];
+            if (mode === 'renew') list = list.filter(s => !s.isDeleted && getRemaining(s) > 0);
+            else if (mode === 'edit') list = list.filter(s => !s.isDeleted);
+            else if (mode === 'history_edit') list = list.filter(s => s.isDeleted || getRemaining(s) <= 0);
+            
+            formContent.innerHTML = `<div class="selector-list">` + list.map(s => `
+                <div class="selector-item" onclick="handleSelect('${s.id}', '${mode}')">
+                    <span class="title">${s.customerName}</span>
+                    <span class="sub">
+                      ${s.phone} | ${s.product} |
+                      ${getRemaining(s) > 0 ? `REMAINING ${getRemaining(s)}x` : `FINISHED`}
+                    </span>
+                </div>
+            `).join('') + `</div>`;
+            
+            formActions.innerHTML = `<button class="admin-btn secondary" onclick="goBackAdminMenu()">Back</button>`;
+        }
+
+        window.handleSelect = (id, mode) => {
+            const sub = subscriptions.find(s => s.id === id);
+            if (mode === 'renew') renderRenewForm(sub);
+            else renderEditForm(sub, mode === 'history_edit');
+        };
+
+        window.renderRenewForm = function(sub) {
+            formTitle.innerText = "Renew: " + sub.customerName;
+            formContent.innerHTML = `
+                <div style="font-size:0.85rem; margin-bottom:1.25rem; background: var(--surface-color); padding: 0.75rem; border-radius: 12px; font-weight: 500;">
+                    ${sub.product} | ${sub.plan} | Cycles: ${sub.usedCycles}/${sub.totalCycles}
+                </div>
+                <div class="form-group"><label>New Email</label><input type="email" id="f-email" placeholder="Input new email here..."></div>
+                <div class="form-group"><label>Update Date</label><input type="date" id="f-date" value="${new Date().toISOString().split('T')[0]}"></div>
+            `;
+            formActions.innerHTML = `
+                <button class="admin-btn" id="btn-submit-renew">Update Cycle</button>
+                <button class="admin-btn secondary" onclick="renderSelector('renew')">Back</button>
+            `;
+            document.getElementById('btn-submit-renew').onclick = async () => {
+                const email = document.getElementById('f-email').value;
+                const dateVal = document.getElementById('f-date').value;
+                if (!email) return alert("Email required");
+                const newHistory = [...(sub.emailHistory || []), { cycle: sub.usedCycles + 1, email, date: Timestamp.fromDate(new Date(dateVal)) }];
+                await updateDoc(doc(db, 'subscriptions', sub.id), { usedCycles: sub.usedCycles + 1, emailHistory: newHistory });
+                closeAdminModals();
+          };
+        };
+
+        window.renderEditForm = function(sub, isHistory = false) {
+            formTitle.innerText = isHistory ? "Edit History: " + sub.customerName : "Edit: " + sub.customerName;
+            formContent.innerHTML = `
+                <div class="form-group"><label>Phone</label><input type="text" id="f-phone" value="${sub.phone}"></div>
+                <div class="form-group"><label>Name</label><input type="text" id="f-name" value="${sub.customerName}"></div>
+                <div class="form-group"><label>Product</label><select id="f-product"><option ${sub.product==='WINK'?'selected':''}>WINK</option><option ${sub.product==='WINKIT'?'selected':''}>WINKIT</option></select></div>
+                <div class="form-group"><label>Plan</label><input type="text" id="f-plan" value="${sub.plan}"></div>
+                <div class="form-group"><label>Total Cycles</label><input type="number" id="f-total" value="${sub.totalCycles}"></div>
+                <div class="form-group"><label>Used Cycles</label><input type="number" id="f-used" value="${sub.usedCycles}"></div>
+                
+                <!-- ADDED IMAGE EDITING -->
+                <div class="form-group">
+                    <label>Proof Image</label>
+                    ${sub.imageUrl ? `<div style="margin-bottom:0.5rem;"><img src="${sub.imageUrl}" style="max-width:100%; border-radius:8px; max-height:100px; object-fit:cover;"></div>` : ''}
+                    <input type="file" id="f-image" accept="image/*">
+                </div>
+
+                <div class="form-group"><label>isDeleted</label><select id="f-deleted"><option value="false" ${!sub.isDeleted?'selected':''}>False (Visible)</option><option value="true" ${sub.isDeleted?'selected':''}>True (History Only)</option></select></div>
+            `;
+            
+            formActions.innerHTML = `
+              <button class="admin-btn" id="btn-submit-edit">Save Changes</button>
+              ${!isHistory
+                ? `<button class="admin-btn danger" id="btn-delete-sub">Move to History</button>`
+                : `<button class="admin-btn danger" id="btn-delete-permanent">Delete Permanent</button>`
+              }
+              <button class="admin-btn secondary" onclick="goBackAdminMenu()">Back</button>
+            `;
+            
+            document.getElementById('btn-submit-edit').onclick = async () => {
+                const btn = document.getElementById('btn-submit-edit');
+                let newImageUrl = sub.imageUrl;
+                
+                // HANDLE NEW IMAGE
+                const imageFile = document.getElementById('f-image').files[0];
+                if (imageFile) {
+                    btn.innerText = "Uploading Image...";
+                    btn.disabled = true;
+                    newImageUrl = await uploadImageToCloudinary(imageFile);
+                    if (!newImageUrl) {
+                         btn.innerText = "Save Changes";
+                         btn.disabled = false;
+                         return;
+                    }
+                    btn.innerText = "Saving Data...";
+                }
+
+                const upd = {
+                    phone: document.getElementById('f-phone').value,
+                    customerName: document.getElementById('f-name').value,
+                    product: document.getElementById('f-product').value,
+                    plan: document.getElementById('f-plan').value,
+                    totalCycles: parseInt(document.getElementById('f-total').value),
+                    usedCycles: parseInt(document.getElementById('f-used').value),
+                    imageUrl: newImageUrl, // Update URL
+                    isDeleted: document.getElementById('f-deleted').value === "true"
+                };
+
+                try {
+                    await updateDoc(doc(db, 'subscriptions', sub.id), upd);
+                    alert("Changes saved!");
+                    closeAdminModals();
+                } catch(err) {
+                    alert("Failed: " + err.message);
+                    btn.innerText = "Save Changes";
+                    btn.disabled = false;
+                }
+            }
+
+            if (document.getElementById('btn-delete-permanent')) {
+                document.getElementById('btn-delete-permanent').onclick = async () => {
+                    if (!confirm("DANGER: Permanently delete this record from Firestore?")) return;
+                    try {
+                        await deleteDoc(doc(db, "subscriptions", sub.id));
+                        alert("Record successfully deleted!");
+                        closeAdminModals();
+                        renderUI();
+                    } catch (err) {
+                        console.error(err);
+                        alert("Delete failed: " + err.message);
+                    }
+                };
+            }
+
+            if (document.getElementById("btn-delete-sub")) {
+              document.getElementById("btn-delete-sub").onclick = async () => {
+                const ok = confirm("Move this order to history?");
+                if (!ok) return;
+                try {
+                  await updateDoc(doc(db, "subscriptions", sub.id), { isDeleted: true });
+                  sub.isDeleted = true;
+                  alert("Moved to history!");
+                  closeAdminModals();
+                  currentView = "home";
+                  renderUI();
+                } catch (err) {
+                  console.error(err);
+                  alert("Move failed: " + err.message);
+                }
+              };
+            }
+        }
+
+        // Sidebar Controls
+        document.getElementById('menu-toggle').onclick = () => { sidebar.classList.add('active'); sidebarOverlay.classList.add('active'); };
+        document.getElementById('sidebar-close').onclick = () => { sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); };
+        sidebarOverlay.onclick = () => { sidebar.classList.remove('active'); sidebarOverlay.classList.remove('active'); };
+
+        document.querySelectorAll('.nav-item').forEach(btn => {
+          btn.onclick = () => {
+            const view = btn.dataset.view;
+            document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            sidebar.classList.remove('active');
+            sidebarOverlay.classList.remove('active');
+
+            if (["order","renew","edit","history_edit"].includes(view)) {
+              openAdmin(view);
+              return;
+            }
+            currentView = view;
+            renderUI();
+          };
+        });
+
+        // Search Controls
+        document.getElementById('search-toggle').onclick = () => {
+            const wrap = document.getElementById('search-wrapper');
+            const open = wrap.style.maxHeight !== '0px';
+            wrap.style.maxHeight = open ? '0' : '80px';
+            document.getElementById('search-icon').setAttribute('data-lucide', open ? 'search' : 'x');
+            if(!open) searchInput.focus();
+            lucide.createIcons();
+        };
+        searchInput.oninput = (e) => { searchTerm = e.target.value; renderUI(); };
+
+        // Modals Closing
+        document.getElementById('modal-close-btn').onclick = () => { modalOverlay.style.display = 'none'; };
+        window.onclick = (e) => { if (e.target.className === 'admin-modal-overlay' || e.target === modalOverlay) { closeAdminModals(); modalOverlay.style.display = 'none'; } };
+
+        // Theme Toggle
+        const setTheme = (t) => {
+            document.body.setAttribute('data-theme', t);
+            localStorage.setItem('theme', t);
+            document.getElementById('theme-icon').setAttribute('data-lucide', t === 'dark' ? 'moon' : 'sun');
+            lucide.createIcons();
+        };
+        document.getElementById('theme-toggle').onclick = () => setTheme(document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
+
+        setTheme(localStorage.getItem('theme') || 'light');
+        init();
+    </script>
+</body>
+</html>
+
