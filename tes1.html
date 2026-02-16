@@ -133,7 +133,7 @@
             width: 100%;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 12px;
             flex-grow: 1;
         }
 
@@ -160,6 +160,28 @@
         }
         .product-tag { font-weight: 600; color: var(--accent); font-size: 0.9rem; }
         .cycles-count { font-weight: 700; }
+
+        /* PROOF SECTION STYLES */
+        .proof-section {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border);
+        }
+        .proof-label {
+            font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .proof-indicator {
+            display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.85rem;
+            padding: 4px 10px; border-radius: 20px; transition: var(--transition);
+        }
+        .proof-indicator.has-proof {
+            background-color: var(--accent-soft); color: var(--accent); border: 1px solid var(--accent);
+        }
+        .proof-indicator.no-proof {
+            background-color: #fef2f2; color: var(--danger); border: 1px solid #fee2e2;
+        }
+        .proof-indicator:hover {
+            transform: scale(1.05);
+        }
 
         /* --- Modals --- */
         #modal-overlay, .admin-modal-overlay {
@@ -189,6 +211,17 @@
             background: var(--surface-color);
         }
 
+        /* Thumbnail Grid in Admin */
+        .thumbnail-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 0.5rem; margin-top: 0.5rem;
+        }
+        .thumb-item {
+            width: 100%; height: 60px; border-radius: 8px; overflow: hidden; border: 1px solid var(--border); position: relative;
+        }
+        .thumb-item img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+
         .admin-btn {
             width: 100%; padding: 0.85rem; border: none; border-radius: 12px;
             font-weight: 700; cursor: pointer; transition: var(--transition);
@@ -207,6 +240,16 @@
         .detail-item { display: flex; flex-direction: column; gap: 0.15rem; }
         .detail-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
         .detail-value { font-size: 0.95rem; font-weight: 700; color: var(--text-main); }
+
+        /* Gallery in Details */
+        .proof-gallery {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 0.75rem; margin-top: 0.5rem;
+        }
+        .gallery-img {
+            width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 12px; border: 1px solid var(--border);
+            cursor: pointer; transition: var(--transition);
+        }
+        .gallery-img:hover { transform: scale(1.05); border-color: var(--accent); }
 
         /* --- Email History Table --- */
         .history-list { margin-top: 1rem; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
@@ -419,29 +462,32 @@
         const CLOUDINARY_URL = "https://api.cloudinary.com/v1_1/dmgyxyhkb/image/upload";
         const CLOUDINARY_PRESET = "admin_store";
 
-        // --- IMAGE UPLOAD FUNCTION ---
-        async function uploadImageToCloudinary(file) {
-            if (!file) return null;
-            
-            const formData = new FormData();
-            formData.append("file", file);
-            formData.append("upload_preset", CLOUDINARY_PRESET);
+        // --- IMAGE UPLOAD FUNCTION (MULTIPLE) ---
+        async function uploadImagesToCloudinary(files) {
+            const uploadedUrls = [];
+            const fileList = Array.from(files);
 
-            try {
-                const response = await fetch(CLOUDINARY_URL, {
-                    method: "POST",
-                    body: formData
-                });
-                
-                if (!response.ok) throw new Error("Upload failed");
-                
-                const data = await response.json();
-                return data.secure_url;
-            } catch (error) {
-                console.error("Cloudinary Upload Error:", error);
-                alert("Image upload failed! Check connection.");
-                return null;
+            for (const file of fileList) {
+                const formData = new FormData();
+                formData.append("file", file);
+                formData.append("upload_preset", CLOUDINARY_PRESET);
+
+                try {
+                    const response = await fetch(CLOUDINARY_URL, {
+                        method: "POST",
+                        body: formData
+                    });
+                    
+                    if (!response.ok) throw new Error("Upload failed for one or more files");
+                    
+                    const data = await response.json();
+                    uploadedUrls.push(data.secure_url);
+                } catch (error) {
+                    console.error("Cloudinary Upload Error:", error);
+                    alert(`Failed to upload ${file.name}. Skipping.`);
+                }
             }
+            return uploadedUrls;
         }
         
         const ADMIN_PIN = "1234";
@@ -530,6 +576,14 @@
             data.forEach((sub, i) => {
                 const rem = getRemaining(sub);
                 const status = getStatus(sub);
+                
+                // Proof Logic: Check array or legacy single string
+                const proofs = sub.proofImages || (sub.imageUrl ? [sub.imageUrl] : []);
+                const hasProof = proofs.length > 0;
+                const proofIcon = hasProof ? 'check-circle' : 'x-circle';
+                const proofClass = hasProof ? 'has-proof' : 'no-proof';
+                const mainImage = hasProof ? proofs[0] : '';
+
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.style.animationDelay = `${i * 0.03}s`;
@@ -546,8 +600,21 @@
                         <div><span class="product-tag">${sub.product}</span> <span style="font-size:0.75rem; opacity:0.6;">${sub.plan}</span></div>
                         <div class="cycles-count" style="font-size:0.8rem;">Remaining: ${rem}x</div>
                     </div>
+                    
+                    <!-- PROOF SECTION -->
+                    <div class="proof-section">
+                         <span class="proof-label">Proof Status</span>
+                         <div class="proof-indicator ${proofClass}" ${hasProof ? `onclick="window.open('${mainImage}', '_blank'); event.stopPropagation();"` : ''}>
+                            <i data-lucide="${proofIcon}" size="16"></i>
+                            ${hasProof ? 'VERIFIED' : 'MISSING'}
+                         </div>
+                    </div>
                 `;
-                card.onclick = () => openDetails(sub);
+                card.onclick = (e) => {
+                    // Prevent opening details if clicking proof
+                    if(e.target.closest('.proof-indicator')) return;
+                    openDetails(sub);
+                };
                 cardsGrid.appendChild(card);
             });
         }
@@ -608,16 +675,24 @@
                 </div>
             `).join('');
             
-            // --- ADDED IMAGE DISPLAY IN DETAILS ---
-            if (sub.imageUrl) {
+            // --- PROOF IMAGES GALLERY ---
+            // Combine new array with legacy single image for display
+            const proofs = sub.proofImages || (sub.imageUrl ? [sub.imageUrl] : []);
+            
+            if (proofs.length > 0) {
                 const imgContainer = document.createElement('div');
                 imgContainer.style.gridColumn = "1 / -1";
                 imgContainer.style.marginTop = "1rem";
-                imgContainer.innerHTML = `
-                    <span class="detail-label" style="display:block; margin-bottom:0.5rem;">Proof of Subscription</span>
-                    <img src="${sub.imageUrl}" style="width:100%; border-radius:12px; border:1px solid var(--border); max-height: 200px; object-fit: cover;" alt="Proof">
-                    <a href="${sub.imageUrl}" target="_blank" style="display:inline-block; margin-top:0.5rem; font-size:0.8rem; color:var(--accent); text-decoration:none; font-weight:700;">View Full Size <i data-lucide="external-link" style="width:12px; display:inline;"></i></a>
-                `;
+                
+                let galleryHTML = `<span class="detail-label" style="display:block; margin-bottom:0.5rem;">Proof of Subscription (${proofs.length})</span>`;
+                galleryHTML += `<div class="proof-gallery">`;
+                
+                proofs.forEach(url => {
+                    galleryHTML += `<img src="${url}" class="gallery-img" onclick="window.open('${url}', '_blank')">`;
+                });
+                
+                galleryHTML += `</div>`;
+                imgContainer.innerHTML = galleryHTML;
                 modalData.appendChild(imgContainer);
             }
 
@@ -769,8 +844,8 @@
                 <div class="form-group"><label>Product</label><select id="f-product"><option>WINK</option><option>WINKIT</option></select></div>
                 <div class="form-group"><label>Plan</label><select id="f-plan"><option>7 HARI</option><option>14 HARI</option><option>1 BULAN</option></select></div>
                 <div class="form-group"><label>First Email</label><input type="email" id="f-email"></div>
-                <!-- ADDED IMAGE INPUT -->
-                <div class="form-group"><label>Proof Image (Optional)</label><input type="file" id="f-image" accept="image/*"></div>
+                <!-- MULTIPLE IMAGE INPUT -->
+                <div class="form-group"><label>Proof Images (Multiple)</label><input type="file" id="f-image" accept="image/*" multiple></div>
                 <div class="form-group"><label>Created Date</label><input type="date" id="f-date" value="${new Date().toISOString().split('T')[0]}"></div>
             `;
             formActions.innerHTML = `
@@ -781,17 +856,18 @@
                 const planMap = { "7 HARI": 1, "14 HARI": 2, "1 BULAN": 4 };
                 const btn = document.getElementById('btn-submit-order');
                 
-                // UPLOAD IMAGE LOGIC
-                let uploadedUrl = "";
-                const imageFile = document.getElementById('f-image').files[0];
-                if (imageFile) {
-                    btn.innerText = "Uploading Image...";
+                // UPLOAD IMAGE LOGIC (MULTIPLE)
+                let uploadedUrls = [];
+                const imageFiles = document.getElementById('f-image').files;
+                if (imageFiles.length > 0) {
+                    btn.innerText = `Uploading ${imageFiles.length} Images...`;
                     btn.disabled = true;
-                    uploadedUrl = await uploadImageToCloudinary(imageFile);
-                    if (!uploadedUrl) {
+                    uploadedUrls = await uploadImagesToCloudinary(imageFiles);
+                    if (uploadedUrls.length === 0) {
+                        alert("Upload failed, please try again or skip images.");
                         btn.innerText = "Save Order";
                         btn.disabled = false;
-                        return; // Stop if upload failed
+                        return; 
                     }
                 }
                 
@@ -805,7 +881,7 @@
                     totalCycles: planMap[document.getElementById('f-plan').value],
                     usedCycles: 1,
                     isDeleted: false,
-                    imageUrl: uploadedUrl, // Save URL
+                    proofImages: uploadedUrls, // Save Array of URLs
                     createdAt: Timestamp.fromDate(new Date(document.getElementById('f-date').value)),
                     emailHistory: [{ cycle: 1, email: document.getElementById('f-email').value, date: Timestamp.fromDate(new Date(document.getElementById('f-date').value)) }]
                 };
@@ -874,6 +950,15 @@
 
         window.renderEditForm = function(sub, isHistory = false) {
             formTitle.innerText = isHistory ? "Edit History: " + sub.customerName : "Edit: " + sub.customerName;
+            
+            const existingProofs = sub.proofImages || (sub.imageUrl ? [sub.imageUrl] : []);
+            let thumbsHTML = "";
+            if(existingProofs.length > 0) {
+                thumbsHTML = `<div class="thumbnail-grid">` + existingProofs.map(url => `
+                    <div class="thumb-item"><img src="${url}"></div>
+                `).join('') + `</div>`;
+            }
+
             formContent.innerHTML = `
                 <div class="form-group"><label>Phone</label><input type="text" id="f-phone" value="${sub.phone}"></div>
                 <div class="form-group"><label>Name</label><input type="text" id="f-name" value="${sub.customerName}"></div>
@@ -882,11 +967,15 @@
                 <div class="form-group"><label>Total Cycles</label><input type="number" id="f-total" value="${sub.totalCycles}"></div>
                 <div class="form-group"><label>Used Cycles</label><input type="number" id="f-used" value="${sub.usedCycles}"></div>
                 
-                <!-- ADDED IMAGE EDITING -->
+                <!-- PROOF IMAGE EDITING -->
                 <div class="form-group">
-                    <label>Proof Image</label>
-                    ${sub.imageUrl ? `<div style="margin-bottom:0.5rem;"><img src="${sub.imageUrl}" style="max-width:100%; border-radius:8px; max-height:100px; object-fit:cover;"></div>` : ''}
-                    <input type="file" id="f-image" accept="image/*">
+                    <label>Proof Images (Current)</label>
+                    ${thumbsHTML || '<div style="font-size:0.8rem; color:var(--text-muted);">No images uploaded.</div>'}
+                </div>
+                
+                <div class="form-group">
+                    <label>Add More Proof Images</label>
+                    <input type="file" id="f-image" accept="image/*" multiple>
                 </div>
 
                 <div class="form-group"><label>isDeleted</label><select id="f-deleted"><option value="false" ${!sub.isDeleted?'selected':''}>False (Visible)</option><option value="true" ${sub.isDeleted?'selected':''}>True (History Only)</option></select></div>
@@ -903,21 +992,23 @@
             
             document.getElementById('btn-submit-edit').onclick = async () => {
                 const btn = document.getElementById('btn-submit-edit');
-                let newImageUrl = sub.imageUrl;
+                let newImageUrls = [];
                 
-                // HANDLE NEW IMAGE
-                const imageFile = document.getElementById('f-image').files[0];
-                if (imageFile) {
-                    btn.innerText = "Uploading Image...";
+                // UPLOAD NEW IMAGES
+                const imageFiles = document.getElementById('f-image').files;
+                if (imageFiles.length > 0) {
+                    btn.innerText = `Uploading ${imageFiles.length} Images...`;
                     btn.disabled = true;
-                    newImageUrl = await uploadImageToCloudinary(imageFile);
-                    if (!newImageUrl) {
-                         btn.innerText = "Save Changes";
-                         btn.disabled = false;
-                         return;
+                    newImageUrls = await uploadImagesToCloudinary(imageFiles);
+                    if (newImageUrls.length === 0 && imageFiles.length > 0) {
+                         alert("Upload failed. Saving other data only.");
                     }
                     btn.innerText = "Saving Data...";
                 }
+
+                // MERGE ARRAYS (Old + New)
+                const currentProofs = sub.proofImages || (sub.imageUrl ? [sub.imageUrl] : []);
+                const finalProofs = [...currentProofs, ...newImageUrls];
 
                 const upd = {
                     phone: document.getElementById('f-phone').value,
@@ -926,7 +1017,7 @@
                     plan: document.getElementById('f-plan').value,
                     totalCycles: parseInt(document.getElementById('f-total').value),
                     usedCycles: parseInt(document.getElementById('f-used').value),
-                    imageUrl: newImageUrl, // Update URL
+                    proofImages: finalProofs, // Updated Array
                     isDeleted: document.getElementById('f-deleted').value === "true"
                 };
 
@@ -1026,4 +1117,5 @@
     </script>
 </body>
 </html>
+
 
